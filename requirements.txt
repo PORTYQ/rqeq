@@ -1,0 +1,41 @@
+# Core dependencies
+streamlit
+pandas
+numpy
+plotly
+matplotlib
+seaborn
+
+# Data sources
+yfinance
+ccxt
+
+# Machine Learning
+tensorflow
+scikit-learn
+shap
+
+# Technical Analysis
+ta
+
+# Configuration
+pydantic
+python-dotenv
+
+# PDF Generation
+reportlab
+Pillow
+
+# Development tools
+black
+isort
+mypy
+pytest
+pytest-cov
+
+# Logging
+loguru
+
+# Type checking
+types-requests
+types-python-dateutil
