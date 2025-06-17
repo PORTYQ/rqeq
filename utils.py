@@ -136,9 +136,13 @@ def align_calendar(df: pd.DataFrame, freq: str, ticker: str) -> pd.DataFrame:
 def check_volume_column(df: pd.DataFrame) -> pd.DataFrame:
     """Check and handle zero volume column"""
     if "Volume" in df.columns:
+        # Check if all volume values are zero
         try:
-            logging.warning("Volume column contains only zeros, removing it")
-            df = df.drop(columns=["Volume"])
+            # Check if all values are 0 or NaN
+            all_zero = (df["Volume"].fillna(0) == 0).all()
+            if all_zero:
+                logging.warning("Volume column contains only zeros, removing it")
+                df = df.drop(columns=["Volume"])
         except Exception as e:
             logging.warning(f"Error checking volume column: {e}")
     return df

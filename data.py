@@ -62,8 +62,6 @@ class DataLoader:
             if data.empty:
                 self.logger.warning(f"No data received from Yahoo Finance for {ticker}")
                 return None
-            if isinstance(data.columns, pd.MultiIndex):
-                data.columns = ["_".join(c).strip("_") for c in data.columns]
 
             # Rename columns to standard format
             data = data.rename(

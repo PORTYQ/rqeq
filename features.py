@@ -2,7 +2,6 @@
 Feature engineering module for Crypto Forecast Application
 """
 
-import re
 import logging
 from typing import Dict, List, Optional, Tuple
 import pandas as pd
@@ -10,23 +9,6 @@ import numpy as np
 import ta
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.model_selection import TimeSeriesSplit
-
-
-def _flatten_columns(df: pd.DataFrame, crypto_ticker: str) -> pd.DataFrame:
-    """Гарантирует одноуровневые колонки."""
-    if isinstance(df.columns, pd.MultiIndex):
-        df.columns = [
-            "_".join([str(x) for x in col if x]).strip("_") for col in df.columns.values
-        ]
-    # map Close_BTC-USD  → Close,  High_ETH-USD → High  …
-    rename_map = {}
-    pattern = re.escape(crypto_ticker)
-    for col in df.columns:
-        m = re.match(rf"(Open|High|Low|Close|Volume)_{pattern}", col)
-        if m:
-            rename_map[col] = m.group(1)
-    df = df.rename(columns=rename_map)
-    return df
 
 
 class FeatureEngineer:
@@ -42,13 +24,6 @@ class FeatureEngineer:
     ) -> pd.DataFrame:
         """Add technical analysis indicators"""
         self.logger.info("Adding technical indicators")
-        close = df["Close"]
-        if close is None:
-            close_col = [c for c in df.columns if "Close" in c][0]
-            close = df[close_col]
-        if isinstance(close, pd.DataFrame):
-            close = close.squeeze("columns")
-        df["Close"] = close
 
         # Price-based indicators
         df["SMA_10"] = ta.trend.sma_indicator(df["Close"], window=10)
@@ -98,10 +73,7 @@ class FeatureEngineer:
         # Lagged features
         for lag in [1, 3, 7]:
             df[f"Close_lag_{lag}"] = df["Close"].shift(lag)
-            if "Volume" in df.columns:
-                df[f"Volume_lag_{lag}"] = df.get("Volume", 0).shift(lag)
-            else:
-                df[f"Volume_lag_{lag}"] = 0.0
+            df[f"Volume_lag_{lag}"] = df.get("Volume", 0).shift(lag)
 
         # Rolling statistics
         for window in [7, 14, 30]:
@@ -166,8 +138,6 @@ class FeatureEngineer:
     ) -> pd.DataFrame:
         """Prepare all features"""
         # Check if volume exists
-        df = _flatten_columns(df, crypto_ticker=self.crypto_ticker)
-        self.logger.debug("COLS AFTER FLAT: %s", list(df.columns)[:10])
         has_volume = "Volume" in df.columns and df["Volume"].sum() > 0
 
         # Add technical indicators

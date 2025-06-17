@@ -179,7 +179,7 @@ class ModelTrainer:
 
             try:
                 # Create and train model
-                model = TimeSeriesModel(**(params or {}))
+                model = TimeSeriesModel(**params)
                 model.fit(X_train, y_train)
 
                 # Evaluate
@@ -211,11 +211,11 @@ class ModelTrainer:
     ) -> TimeSeriesModel:
         """Train model with given parameters"""
 
-        if use_hyperparam_search and not params:
+        if use_hyperparam_search and params is None:
             # Perform hyperparameter search
             params, _ = self.hyperparameter_search(X_train, y_train, model_type)
-        if not isinstance(params, dict) or params is None:
-            self.logger.warning("params %s → подменяю на дефолт", type(params))
+        elif params is None:
+            # Use default parameters
             params = {
                 "model_type": model_type,
                 "n_layers": 2,
@@ -227,11 +227,10 @@ class ModelTrainer:
                 "horizon": y_train.shape[1],
             }
 
-        self.logger.debug("PARAMS passed to TimeSeriesModel → %s", params)
+        # Train final model
+        self.logger.info("Training final model with best parameters")
         model = TimeSeriesModel(**params)
 
-        # Train final model
-        self.logger.info("Training final model with parameters: %s", params)
         # Combine train and validation for final training
         X_combined = np.concatenate([X_train, X_val])
         y_combined = np.concatenate([y_train, y_val])
@@ -367,8 +366,7 @@ class ModelTrainer:
                 X_test,
                 y_test,
                 model_type="LSTM",
-                params=self.best_params or {},
-                use_hyperparam_search=False,
+                use_hyperparam_search=True,
             )
 
             metrics_with_macro = self.evaluate_model(model_with_macro, X_test, y_test)
